@@ -1,0 +1,50 @@
+#! /usr/bin/python3
+
+import subprocess
+import argparse
+
+def get_brightness(): 
+    _xrandr = ["xrandr", "--verbose"] 
+    _grep = ["grep", "-m", "1", "-i", "brightness"] 
+    _cut = ["cut", "-f2", "-d", " "] 
+    _xrandr_res = subprocess.Popen(_xrandr, stdout=subprocess.PIPE) 
+    _grep_res = subprocess.Popen(_grep, stdin=_xrandr_res.stdout,
+            stdout=subprocess.PIPE) 
+    _cut_res = subprocess.Popen(_cut, stdin=_grep_res.stdout, 
+            stdout=subprocess.PIPE) 
+
+    _brightness = float(_cut_res.stdout.readline().decode("ascii").strip()) 
+    return _brightness
+
+def inc_brightness(): 
+    _brightness = get_brightness() 
+    if _brightness >= 1.0: 
+        return; 
+    _brightness += 0.1 
+    update_brightness(_brightness) 
+
+
+def dec_brightness(): 
+    _brightness = get_brightness() 
+    if _brightness <= 0.2: 
+        return; 
+    _brightness -= 0.1
+    update_brightness(_brightness) 
+
+def update_brightness(brightness): 
+    _xrandr = ["xrandr", "--output", "eDP-1", "--brightness", str(brightness)] 
+    subprocess.Popen(_xrandr) 
+
+def parse_args(): 
+    parser = argparse.ArgumentParser(description="Update your display's brightness.")
+    parser.add_argument("-i", action="store_true") 
+    parser.add_argument("-d", action="store_true") 
+    args = parser.parse_args() 
+
+    if args.i: 
+        inc_brightness() 
+    elif args.d: 
+        dec_brightness() 
+
+if __name__ == '__main__': 
+    parse_args() 
