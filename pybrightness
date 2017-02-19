@@ -4,36 +4,39 @@ import subprocess
 import argparse
 
 def get_brightness(): 
-    _xrandr = ["xrandr", "--verbose"] 
-    _grep = ["grep", "-m", "1", "-i", "brightness"] 
-    _cut = ["cut", "-f2", "-d", " "] 
-    _xrandr_res = subprocess.Popen(_xrandr, stdout=subprocess.PIPE) 
-    _grep_res = subprocess.Popen(_grep, stdin=_xrandr_res.stdout,
-            stdout=subprocess.PIPE) 
-    _cut_res = subprocess.Popen(_cut, stdin=_grep_res.stdout, 
-            stdout=subprocess.PIPE) 
+    # max brightness on my system is 852    
+    max_brightness = 852
+    file_name = "/sys/class/backlight/intel_backlight/brightness" 
 
-    _brightness = float(_cut_res.stdout.readline().decode("ascii").strip()) 
-    return _brightness
+    _brightness = 0 
+
+    with open(file_name, 'r') as file:
+        _brightness = file.read().replace('\n', '') 
+
+    return int(_brightness) 
 
 def inc_brightness(): 
     _brightness = get_brightness() 
-    if _brightness >= 1.0: 
-        return; 
-    _brightness += 0.1 
+    _brightness += int(852 * 0.1) 
+    if _brightness >= 852: 
+        _brightness = 852
+
     update_brightness(_brightness) 
 
 
 def dec_brightness(): 
     _brightness = get_brightness() 
-    if _brightness <= 0.2: 
+    if _brightness <= 0.2 * 852: 
         return; 
-    _brightness -= 0.1
+    _brightness -= int(852 * 0.1) 
     update_brightness(_brightness) 
 
 def update_brightness(brightness): 
-    _xrandr = ["xrandr", "--output", "eDP-1", "--brightness", str(brightness)] 
-    subprocess.Popen(_xrandr) 
+    _file = "/sys/class/backlight/intel_backlight/brightness" 
+    _targ = open(_file, 'w') 
+    _targ.write(str(brightness)) 
+    _targ.close() 
+    
 
 def parse_args(): 
     parser = argparse.ArgumentParser(description="Update your display's brightness.")
