@@ -3,9 +3,13 @@
 import subprocess
 import argparse
 
+def get_max_brightness(): 
+    _file_path = "/sys/class/backlight/intel_backlight/max_brightness" 
+    _f = open(_file_path, 'r') 
+    _max_br = _f.read().replace('\n', '') 
+    return int(_max_br) 
+
 def get_brightness(): 
-    # max brightness on my system is 852    
-    max_brightness = 852
     file_name = "/sys/class/backlight/intel_backlight/brightness" 
 
     _brightness = 0 
@@ -15,20 +19,20 @@ def get_brightness():
 
     return int(_brightness) 
 
-def inc_brightness(): 
+def inc_brightness(max): 
     _brightness = get_brightness() 
-    _brightness += int(852 * 0.1) 
-    if _brightness >= 852: 
-        _brightness = 852
+    _brightness += int(max * 0.1) 
+    if _brightness >= max: 
+        _brightness = max
 
     update_brightness(_brightness) 
 
 
-def dec_brightness(): 
+def dec_brightness(max): 
     _brightness = get_brightness() 
-    if _brightness <= 0.2 * 852: 
+    if _brightness <= 0.1 * max: 
         return; 
-    _brightness -= int(852 * 0.1) 
+    _brightness -= int(max * 0.1) 
     update_brightness(_brightness) 
 
 def update_brightness(brightness): 
@@ -39,15 +43,17 @@ def update_brightness(brightness):
     
 
 def parse_args(): 
+    _max = get_max_brightness() 
+
     parser = argparse.ArgumentParser(description="Update your display's brightness.")
     parser.add_argument("-i", action="store_true") 
     parser.add_argument("-d", action="store_true") 
     args = parser.parse_args() 
 
     if args.i: 
-        inc_brightness() 
+        inc_brightness(_max) 
     elif args.d: 
-        dec_brightness() 
+        dec_brightness(_max) 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     parse_args() 
